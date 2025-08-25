@@ -1,0 +1,902 @@
+{
+  "name": "swipeeclean-smart",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "ios:build": "npm run build && npx cap sync ios && npx cap open ios",
+    "ios:run": "npm run build && npx cap run ios",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+  },
+  "dependencies": {
+    "@capacitor/android": "^5.5.1",
+    "@capacitor/app": "^5.0.6",
+    "@capacitor/core": "^5.5.1",
+    "@capacitor/haptics": "^5.0.6",
+    "@capacitor/ios": "^5.5.1",
+    "@capacitor/keyboard": "^5.0.6",
+    "@capacitor/push-notifications": "^5.1.0",
+    "@capacitor/splash-screen": "^5.0.6",
+    "@capacitor/status-bar": "^5.0.6",
+    "@ionic/react": "^7.5.0",
+    "@ionic/react-router": "^7.5.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router": "^6.8.1",
+    "react-router-dom": "^6.8.1",
+    "ionicons": "^7.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^5.5.1",
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@typescript-eslint/eslint-plugin": "^6.10.0",
+    "@typescript-eslint/parser": "^6.10.0",
+    "@vitejs/plugin-react": "^4.1.1",
+    "eslint": "^8.53.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.4",
+    "typescript": "^5.2.2",
+    "vite": "^4.5.0"
+  }
+}
+File 2: capacitor.config.ts
+typescript
+
+
+import { CapacitorConfig } from '@capacitor/core';
+
+const config: CapacitorConfig = {
+  appId: 'com.swipeeclean.smart',
+  appName: 'SwipeeClean Smart',
+  webDir: 'dist',
+  server: {
+    androidScheme: 'https'
+  },
+  ios: {
+    contentInset: 'automatic',
+    scrollEnabled: true,
+    backgroundColor: '#ffffff'
+  },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 2000,
+      launchAutoHide: true,
+      backgroundColor: '#ffffff',
+      androidSplashResourceName: 'splash',
+      androidScaleType: 'CENTER_CROP',
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true
+    },
+    StatusBar: {
+      style: 'DARK',
+      backgroundColor: '#ffffff'
+    },
+    Keyboard: {
+      resize: 'body',
+      style: 'DARK',
+      resizeOnFullScreen: true
+    },
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert']
+    }
+  }
+};
+
+export default config;
+File 3: src/App.tsx
+tsx
+
+
+import React, { useEffect } from 'react';
+import { IonApp, IonRouterOutlet, setupIonicReact } from '@ionic/react';
+import { IonReactRouter } from '@ionic/react-router';
+import { Redirect, Route } from 'react-router-dom';
+import { App as CapacitorApp } from '@capacitor/app';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { SplashScreen } from '@capacitor/splash-screen';
+
+import Home from './pages/Home';
+import CleaningSchedule from './pages/CleaningSchedule';
+import SmartRecommendations from './pages/SmartRecommendations';
+import Profile from './pages/Profile';
+import Settings from './pages/Settings';
+
+import '@ionic/react/css/core.css';
+import '@ionic/react/css/normalize.css';
+import '@ionic/react/css/structure.css';
+import '@ionic/react/css/typography.css';
+import '@ionic/react/css/ionic.swiper.css';
+import '@ionic/react/css/padding.css';
+import '@ionic/react/css/float-elements.css';
+import '@ionic/react/css/text-alignment.css';
+import '@ionic/react/css/text-transformation.css';
+import '@ionic/react/css/flex-utils.css';
+import '@ionic/react/css/display.css';
+
+import './theme/variables.css';
+import './App.css';
+
+setupIonicReact();
+
+const App: React.FC = () => {
+  useEffect(() => {
+    const initializeApp = async () => {
+      await StatusBar.setStyle({ style: Style.Dark });
+      await SplashScreen.hide();
+      
+      CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+        console.log('App state changed. Is active?', isActive);
+      });
+    };
+
+    initializeApp();
+  }, []);
+
+  return (
+    <IonApp>
+      <IonReactRouter>
+        <IonRouterOutlet>
+          <Route exact path="/home">
+            <Home />
+          </Route>
+          <Route exact path="/schedule">
+            <CleaningSchedule />
+          </Route>
+          <Route exact path="/recommendations">
+            <SmartRecommendations />
+          </Route>
+          <Route exact path="/profile">
+            <Profile />
+          </Route>
+          <Route exact path="/settings">
+            <Settings />
+          </Route>
+          <Route exact path="/">
+            <Redirect to="/home" />
+          </Route>
+        </IonRouterOutlet>
+      </IonReactRouter>
+    </IonApp>
+  );
+};
+
+export default App;
+File 4: src/pages/Home.tsx
+tsx
+
+
+import React, { useState } from 'react';
+import {
+  IonContent,
+  IonHeader,
+  IonPage,
+  IonTitle,
+  IonToolbar,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonButton,
+  IonIcon,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonFab,
+  IonFabButton,
+  IonTabBar,
+  IonTabButton,
+  IonTabs,
+  IonLabel
+} from '@ionic/react';
+import {
+  home,
+  calendar,
+  bulb,
+  person,
+  add,
+  checkmark,
+  time,
+  star
+} from 'ionicons/icons';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
+
+const Home: React.FC = () => {
+  const [todaysTasks, setTodaysTasks] = useState([
+    { id: 1, task: 'Kitchen Deep Clean', completed: false, priority: 'high' },
+    { id: 2, task: 'Bathroom Sanitize', completed: true, priority: 'medium' },
+    { id: 3, task: 'Living Room Vacuum', completed: false, priority: 'low' }
+  ]);
+
+  const [stats] = useState({
+    completedToday: 1,
+    totalTasks: 3,
+    streak: 5,
+    efficiency: 85
+  });
+
+  const handleTaskComplete = async (taskId: number) => {
+    await Haptics.impact({ style: ImpactStyle.Light });
+    
+    setTodaysTasks(tasks =>
+      tasks.map(task =>
+        task.id === taskId ? { ...task, completed: !task.completed } : task
+      )
+    );
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'danger';
+      case 'medium': return 'warning';
+      case 'low': return 'success';
+      default: return 'medium';
+    }
+  };
+
+  return (
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>SwipeeClean Smart</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      
+      <IonContent fullscreen>
+        <IonHeader collapse="condense">
+          <IonToolbar>
+            <IonTitle size="large">SwipeeClean Smart</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+
+        <IonGrid>
+          <IonRow>
+            <IonCol size="6">
+              <IonCard>
+                <IonCardContent>
+                  <div className="stat-card">
+                    <h2>{stats.completedToday}/{stats.totalTasks}</h2>
+                    <p>Tasks Today</p>
+                  </div>
+                </IonCardContent>
+              </IonCard>
+            </IonCol>
+            <IonCol size="6">
+              <IonCard>
+                <IonCardContent>
+                  <div className="stat-card">
+                    <h2>{stats.streak}</h2>
+                    <p>Day Streak</p>
+                  </div>
+                </IonCardContent>
+              </IonCard>
+            </IonCol>
+          </IonRow>
+        </IonGrid>
+
+        <IonCard>
+          <IonCardHeader>
+            <IonCardTitle>Today's Tasks</IonCardTitle>
+          </IonCardHeader>
+          <IonCardContent>
+            {todaysTasks.map(task => (
+              <div key={task.id} className="task-item">
+                <IonButton
+                  fill="clear"
+                  size="small"
+                  color={task.completed ? 'success' : 'medium'}
+                  onClick={() => handleTaskComplete(task.id)}
+                >
+                  <IonIcon icon={checkmark} />
+                </IonButton>
+                <div className="task-content">
+                  <h3 className={task.completed ? 'completed' : ''}>{task.task}</h3>
+                  <IonButton
+                    size="small"
+                    fill="solid"
+                    color={getPriorityColor(task.priority)}
+                  >
+                    {task.priority}
+                  </IonButton>
+                </div>
+              </div>
+            ))}
+          </IonCardContent>
+        </IonCard>
+
+        <IonCard>
+          <IonCardHeader>
+            <IonCardTitle>Quick Actions</IonCardTitle>
+          </IonCardHeader>
+          <IonCardContent>
+            <IonGrid>
+              <IonRow>
+                <IonCol>
+                  <IonButton expand="block" fill="outline">
+                    <IonIcon icon={time} slot="start" />
+                    Start Timer
+                  </IonButton>
+                </IonCol>
+                <IonCol>
+                  <IonButton expand="block" fill="outline">
+                    <IonIcon icon={star} slot="start" />
+                    Get Tips
+                  </IonButton>
+                </IonCol>
+              </IonRow>
+            </IonGrid>
+          </IonCardContent>
+        </IonCard>
+
+        <IonFab vertical="bottom" horizontal="end" slot="fixed">
+          <IonFabButton>
+            <IonIcon icon={add} />
+          </IonFabButton>
+        </IonFab>
+
+        <IonTabs>
+          <IonTabBar slot="bottom">
+            <IonTabButton tab="home" href="/home">
+              <IonIcon icon={home} />
+              <IonLabel>Home</IonLabel>
+            </IonTabButton>
+            <IonTabButton tab="schedule" href="/schedule">
+              <IonIcon icon={calendar} />
+              <IonLabel>Schedule</IonLabel>
+            </IonTabButton>
+            <IonTabButton tab="recommendations" href="/recommendations">
+              <IonIcon icon={bulb} />
+              <IonLabel>Smart Tips</IonLabel>
+            </IonTabButton>
+            <IonTabButton tab="profile" href="/profile">
+              <IonIcon icon={person} />
+              <IonLabel>Profile</IonLabel>
+            </IonTabButton>
+          </IonTabBar>
+        </IonTabs>
+      </IonContent>
+    </IonPage>
+  );
+};
+
+export default Home;
+File 5: src/pages/CleaningSchedule.tsx
+tsx
+
+
+import React, { useState } from 'react';
+import {
+  IonContent,
+  IonHeader,
+  IonPage,
+  IonTitle,
+  IonToolbar,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonButton,
+  IonIcon,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonCheckbox,
+  IonSegment,
+  IonSegmentButton,
+  IonBadge,
+  IonFab,
+  IonFabButton
+} from '@ionic/react';
+import { add, checkmark, time } from 'ionicons/icons';
+
+const CleaningSchedule: React.FC = () => {
+  const [selectedSegment, setSelectedSegment] = useState('today');
+  const [tasks, setTasks] = useState({
+    today: [
+      { id: 1, task: 'Kitchen Deep Clean', time: '9:00 AM', completed: false, room: 'Kitchen' },
+      { id: 2, task: 'Bathroom Sanitize', time: '2:00 PM', completed: true, room: 'Bathroom' },
+      { id: 3, task: 'Living Room Vacuum', time: '4:00 PM', completed: false, room: 'Living Room' }
+    ],
+    week: [
+      { id: 4, task: 'Bedroom Dust', time: 'Tomorrow', completed: false, room: 'Bedroom' },
+      { id: 5, task: 'Kitchen Floor Mop', time: 'Wednesday', completed: false, room: 'Kitchen' },
+      { id: 6, task: 'Bathroom Deep Clean', time: 'Friday', completed: false, room: 'Bathroom' }
+    ],
+    month: [
+      { id: 7, task: 'Window Cleaning', time: 'Next Week', completed: false, room: 'All Rooms' },
+      { id: 8, task: 'Carpet Deep Clean', time: 'Week 3', completed: false, room: 'Living Room' },
+      { id: 9, task: 'Appliance Maintenance', time: 'Week 4', completed: false, room: 'Kitchen' }
+    ]
+  });
+
+  const toggleTask = (taskId: number) => {
+    setTasks(prevTasks => ({
+      ...prevTasks,
+      [selectedSegment]: prevTasks[selectedSegment as keyof typeof prevTasks].map(task =>
+        task.id === taskId ? { ...task, completed: !task.completed } : task
+      )
+    }));
+  };
+
+  const currentTasks = tasks[selectedSegment as keyof typeof tasks];
+  const completedCount = currentTasks.filter(task => task.completed).length;
+
+  return (
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>Cleaning Schedule</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      
+      <IonContent fullscreen>
+        <IonHeader collapse="condense">
+          <IonToolbar>
+            <IonTitle size="large">Schedule</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+
+        <IonCard>
+          <IonCardHeader>
+            <IonCardTitle>Progress</IonCardTitle>
+          </IonCardHeader>
+          <IonCardContent>
+            <div className="progress-stats">
+              <h2>{completedCount}/{currentTasks.length}</h2>
+              <p>Tasks Completed</p>
+              <div className="progress-bar">
+                <div 
+                  className="progress-fill" 
+                  style={{ width: `${(completedCount / currentTasks.length) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          </IonCardContent>
+        </IonCard>
+
+        <IonSegment value={selectedSegment} onIonChange={e => setSelectedSegment(e.detail.value as string)}>
+          <IonSegmentButton value="today">
+            <IonLabel>Today</IonLabel>
+          </IonSegmentButton>
+          <IonSegmentButton value="week">
+            <IonLabel>This Week</IonLabel>
+          </IonSegmentButton>
+          <IonSegmentButton value="month">
+            <IonLabel>This Month</IonLabel>
+          </IonSegmentButton>
+        </IonSegment>
+
+        <IonList>
+          {currentTasks.map(task => (
+            <IonItem key={task.id}>
+              <IonCheckbox
+                slot="start"
+                checked={task.completed}
+                onIonChange={() => toggleTask(task.id)}
+              />
+              <IonLabel>
+                <h2 className={task.completed ? 'completed-task' : ''}>{task.task}</h2>
+                <p>{task.room}</p>
+                <div className="task-meta">
+                  <IonIcon icon={time} />
+                  <span>{task.time}</span>
+                </div>
+              </IonLabel>
+              {task.completed && (
+                <IonBadge color="success" slot="end">
+                  <IonIcon icon={checkmark} />
+                </IonBadge>
+              )}
+            </IonItem>
+          ))}
+        </IonList>
+
+        <IonFab vertical="bottom" horizontal="end" slot="fixed">
+          <IonFabButton>
+            <IonIcon icon={add} />
+          </IonFabButton>
+        </IonFab>
+      </IonContent>
+    </IonPage>
+  );
+};
+
+export default CleaningSchedule;
+File 6: src/pages/SmartRecommendations.tsx
+tsx
+
+
+import React, { useState } from 'react';
+import {
+  IonContent,
+  IonHeader,
+  IonPage,
+  IonTitle,
+  IonToolbar,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonButton,
+  IonIcon,
+  IonChip,
+  IonLabel,
+  IonList,
+  IonItem,
+  IonThumbnail
+} from '@ionic/react';
+import { bulb, star, time, checkmark } from 'ionicons/icons';
+
+interface Recommendation {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  timeEstimate: string;
+}
+
+const SmartRecommendations: React.FC = () => {
+  const [recommendations] = useState<Recommendation[]>([
+    {
+      id: 1,
+      title: 'Use Microfiber Cloths for Dusting',
+      description: 'Microfiber cloths trap dust better than regular cloths and don\'t require cleaning sprays.',
+      category: 'Dusting',
+      difficulty: 'easy',
+      timeEstimate: '2 min'
+    },
+    {
+      id: 2,
+      title: 'Clean from Top to Bottom',
+      description: 'Always start cleaning from the highest surfaces and work your way down to avoid re-cleaning.',
+      category: 'Technique',
+      difficulty: 'easy',
+      timeEstimate: '5 min'
+    },
+    {
+      id: 3,
+      title: 'Use Baking Soda for Tough Stains',
+      description: 'Create a paste with baking soda and water for natural stain removal on various surfaces.',
+      category: 'Stain Removal',
+      difficulty: 'medium',
+      timeEstimate: '10 min'
+    },
+    {
+      id: 4,
+      title: 'Steam Clean Without Chemicals',
+      description: 'Use steam to sanitize surfaces naturally without harsh chemicals.',
+      category: 'Sanitizing',
+      difficulty: 'medium',
+      timeEstimate: '15 min'
+    },
+    {
+      id: 5,
+      title: 'Organize Before You Clean',
+      description: 'Declutter and organize spaces before deep cleaning for maximum efficiency.',
+      category: 'Organization',
+      difficulty: 'easy',
+      timeEstimate: '10 min'
+    }
+  ]);
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy': return 'success';
+      case 'medium': return 'warning';
+      case 'hard': return 'danger';
+      default: return 'medium';
+    }
+  };
+
+  return (
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>Smart Recommendations</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      
+      <IonContent fullscreen>
+        <IonHeader collapse="condense">
+          <IonToolbar>
+            <IonTitle size="large">Smart Tips</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+
+        <IonCard>
+          <IonCardHeader>
+            <IonCardTitle>
+              <IonIcon icon={star} color="warning" />
+              Tip of the Day
+            </IonCardTitle>
+          </IonCardHeader>
+          <IonCardContent>
+            <h3>Clean Your Cleaning Tools</h3>
+            <p>Don't forget to clean your cleaning tools! Wash mop heads, rinse sponges, and sanitize vacuum filters regularly for optimal performance.</p>
+            <IonButton size="small" fill="outline">
+              <IonIcon icon={checkmark} slot="start" />
+              Mark as Read
+            </IonButton>
+          </IonCardContent>
+        </IonCard>
+
+        <IonList>
+          {recommendations.map(rec => (
+            <IonItem key={rec.id} button>
+              <IonThumbnail slot="start">
+                <div className="recommendation-icon">
+                  <IonIcon icon={bulb} color="primary" />
+                </div>
+              </IonThumbnail>
+              <IonLabel>
+                <h2>{rec.title}</h2>
+                <p>{rec.description}</p>
+                <div className="recommendation-meta">
+                  <IonChip color="primary" size="small">
+                    {rec.category}
+                  </IonChip>
+                  <IonChip color={getDifficultyColor(rec.difficulty)} size="small">
+                    {rec.difficulty}
+                  </IonChip>
+                  <IonChip color="medium" size="small">
+                    <IonIcon icon={time} />
+                    <IonLabel>{rec.timeEstimate}</IonLabel>
+                  </IonChip>
+                </div>
+              </IonLabel>
+            </IonItem>
+          ))}
+        </IonList>
+      </IonContent>
+    </IonPage>
+  );
+};
+
+export default SmartRecommendations;
+File 7: src/pages/Profile.tsx
+tsx
+
+
+import React, { useState } from 'react';
+import {
+  IonContent,
+  IonHeader,
+  IonPage,
+  IonTitle,
+  IonToolbar,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonButton,
+  IonIcon,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonAvatar,
+  IonBadge,
+  IonProgressBar,
+  IonGrid,
+  IonRow,
+  IonCol
+} from '@ionic/react';
+import { person, trophy, star, calendar, checkmark, settings } from 'ionicons/icons';
+
+const Profile: React.FC = () => {
+  const [userStats] = useState({
+    name: 'Sarah Johnson',
+    level: 12,
+    totalTasks: 247,
+    completedTasks: 231,
+    streak: 15,
+    achievements: [
+      { id: 1, name: 'First Week', description: 'Complete 7 days in a row', earned: true },
+      { id: 2, name: 'Speed Cleaner', description: 'Complete 10 tasks in one day', earned: true },
+      { id: 3, name: 'Consistency King', description: '30 day streak', earned: false },
+      { id: 4, name: 'Room Master', description: 'Master all room types', earned: false }
+    ],
+    weeklyProgress: 85
+  });
+
+  const completionRate = Math.round((userStats.completedTasks / userStats.totalTasks) * 100);
+
+  return (
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>Profile</IonTitle>
+          <IonButton slot="end" fill="clear">
+            <IonIcon icon={settings} />
+          </IonButton>
+        </IonToolbar>
+      </IonHeader>
+      
+      <IonContent fullscreen>
+        <IonHeader collapse="condense">
+          <IonToolbar>
+            <IonTitle size="large">Profile</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+
+        <IonCard>
+          <IonCardContent>
+            <div className="profile-header">
+              <IonAvatar className="profile-avatar">
+                <IonIcon icon={person} />
+              </IonAvatar>
+              <div className="profile-info">
+                <h2>{userStats.name}</h2>
+                <p>Level {userStats.level} Cleaner</p>
+                <IonProgressBar value={userStats.weeklyProgress / 100} color="primary" />
+                <p className="progress-text">{userStats.weeklyProgress}% to next level</p>
+              </div>
+            </div>
+          </IonCardContent>
+        </IonCard>
+
+        <IonGrid>
+          <IonRow>
+            <IonCol size="6">
+              <IonCard>
+                <IonCardContent>
+                  <div className="stat-card">
+                    <IonIcon icon={checkmark} color="success" />
+                    <h3>{userStats.completedTasks}</h3>
+                    <p>Tasks Completed</p>
+                  </div>
+                </IonCardContent>
+              </IonCard>
+            </IonCol>
+            <IonCol size="6">
+              <IonCard>
+                <IonCardContent>
+                  <div className="stat-card">
+                    <IonIcon icon={calendar} color="primary" />
+                    <h3>{userStats.streak}</h3>
+                    <p>Day Streak</p>
+                  </div>
+                </IonCardContent>
+              </IonCard>
+            </IonCol>
+          </IonRow>
+          <IonRow>
+            <IonCol size="6">
+              <IonCard>
+                <IonCardContent>
+                  <div className="stat-card">
+                    <IonIcon icon={star} color="warning" />
+                    <h3>{completionRate}%</h3>
+                    <p>Success Rate</p>
+                  </div>
+                </IonCardContent>
+              </IonCard>
+            </IonCol>
+            <IonCol size="6">
+              <IonCard>
+                <IonCardContent>
+                  <div className="stat-card">
+                    <IonIcon icon={trophy} color="warning" />
+                    <h3>{userStats.level}</h3>
+                    <p>Current Level</p>
+                  </div>
+                </IonCardContent>
+              </IonCard>
+            </IonCol>
+          </IonRow>
+        </IonGrid>
+
+        <IonCard>
+          <IonCardHeader>
+            <IonCardTitle>Achievements</IonCardTitle>
+          </IonCardHeader>
+          <IonCardContent>
+            <IonList>
+              {userStats.achievements.map(achievement => (
+                <IonItem key={achievement.id}>
+                  <IonIcon 
+                    icon={trophy} 
+                    slot="start" 
+                    color={achievement.earned ? 'warning' : 'medium'} 
+                  />
+                  <IonLabel>
+                    <h3>{achievement.name}</h3>
+                    <p>{achievement.description}</p>
+                  </IonLabel>
+                  {achievement.earned && (
+                    <IonBadge color="success" slot="end">Earned</IonBadge>
+                  )}
+                </IonItem>
+              ))}
+            </IonList>
+          </IonCardContent>
+        </IonCard>
+      </IonContent>
+    </IonPage>
+  );
+};
+
+export default Profile;
+File 8: src/pages/Settings.tsx
+tsx
+
+
+import React, { useState } from 'react';
+import {
+  IonContent,
+  IonHeader,
+  IonPage,
+  IonTitle,
+  IonToolbar,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonToggle,
+  IonSelect,
+  IonSelectOption,
+  IonButton,
+  IonIcon,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle
+} from '@ionic/react';
+import { 
+  notifications, 
+  moon, 
+  language, 
+  help, 
+  document, 
+  shield, 
+  mail,
+  star,
+  refresh
+} from 'ionicons/icons';
+
+const Settings: React.FC = () => {
+  const [settings, setSettings] = useState({
+    notifications: true,
+    darkMode: false,
+    language: 'en',
+    reminderTime: '09:00',
+    autoSync: true
+  });
+
+  const handleSettingChange = (key: string, value: any) => {
+    setSettings(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  return (
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>Settings</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      
+      <IonContent fullscreen>
+        <IonHeader collapse="condense">
+          <IonToolbar>
+            <IonTitle size="large">Settings</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+
+        <IonCard>
+          <IonCardHeader>
+            <IonCardTitle>Preferences</IonCardTitle>
+          </IonCardHeader>
+          <IonCardContent>
+            <IonList>
+              <IonItem>
+                <IonIcon icon={notifications} slot="start" />
+                <IonLabel>Push Notifications</IonLabel>
+                <IonToggle
+                  checked={settings.notifications}
+                  onIonChange={
