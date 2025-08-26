@@ -2,104 +2,85 @@ workflows:
   ios-workflow:
     name: SwipeeClean iOS Build
     environment:
-      node: v20.17.0
+      node: latest
       xcode: latest
     scripts:
-      - name: Create simple app (skip npm build)
+      - name: Fresh start - ignore all existing files
         script: |
-          mv package.json package.json.backup
+          # Move ALL existing files out of the way
+          mkdir -p backup
+          mv *.json backup/ 2>/dev/null || true
+          mv *.ts backup/ 2>/dev/null || true
+          mv *.js backup/ 2>/dev/null || true
+          mv node_modules backup/ 2>/dev/null || true
+          
+          # Create completely fresh setup
           mkdir -p www
-          cat > www/index.html << 'EOF'
-          <!DOCTYPE html>
-          <html lang="en">
+          echo '<!DOCTYPE html>
+          <html>
           <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <title>SwipeeClean Smart</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <style>
-                  body { 
-                      font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
-                      margin: 0; padding: 20px; 
-                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                      color: white; min-height: 100vh;
-                  }
-                  .container { max-width: 600px; margin: 0 auto; text-align: center; }
-                  .feature { 
-                      background: rgba(255,255,255,0.1); 
-                      padding: 20px; margin: 15px 0; 
-                      border-radius: 15px; 
-                  }
+                  body { font-family: -apple-system, sans-serif; margin: 0; padding: 20px; 
+                         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                         color: white; min-height: 100vh; text-align: center; }
+                  .feature { background: rgba(255,255,255,0.1); padding: 20px; margin: 15px auto; 
+                            border-radius: 15px; max-width: 500px; }
                   .logo { font-size: 4em; margin-bottom: 20px; }
-                  .price { 
-                      background: rgba(255,255,255,0.2); 
-                      padding: 20px; border-radius: 15px; 
-                      font-weight: bold; font-size: 1.2em;
-                  }
+                  .price { background: rgba(255,255,255,0.2); font-weight: bold; }
               </style>
           </head>
           <body>
-              <div class="container">
-                  <div class="logo">🧹</div>
-                  <h1>SwipeeClean Smart</h1>
-                  <p>Premium Storage Optimization for iOS</p>
-                  
-                  <div class="feature">
-                      <h3>🚀 Smart Storage Analysis</h3>
-                      <p>AI-powered storage scanning and optimization</p>
-                  </div>
-                  
-                  <div class="feature">
-                      <h3>📱 Duplicate File Detection</h3>
-                      <p>Advanced algorithms to find and remove duplicates</p>
-                  </div>
-                  
-                  <div class="price">
-                      💰 Premium Subscription: $4.99/month
-                  </div>
-                  
-                  <div class="feature">
-                      <h3>🛡️ Advanced Spam Blocking</h3>
-                      <p>Call and text spam protection</p>
-                  </div>
-                  
-                  <div class="feature">
-                      <h3>📸 Smart Photo Organization</h3>
-                      <p>Intelligent media file management</p>
-                  </div>
-                  
-                  <div class="feature">
-                      <h3>⚡ Performance Optimization</h3>
-                      <p>Device speed and memory enhancement</p>
-                  </div>
-                  
-                  <div style="margin-top: 40px; padding: 25px; background: rgba(255,255,255,0.15); border-radius: 20px;">
-                      <h2>🎯 Ready to Transform Your Device!</h2>
-                      <p><strong>SwipeeClean Smart - Professional Storage Management</strong></p>
-                      <p>Goal: $1,000,000 by September 2025</p>
-                  </div>
+              <div class="logo">🧹</div>
+              <h1>SwipeeClean Smart</h1>
+              <p>Premium Storage Optimization for iOS</p>
+              <div class="feature"><h3>🚀 Smart Storage Analysis</h3><p>AI-powered scanning</p></div>
+              <div class="feature"><h3>📱 Duplicate Detection</h3><p>Remove duplicate files</p></div>
+              <div class="feature price"><h3>💰 Premium: $4.99/month</h3><p>Unlock all features</p></div>
+              <div class="feature"><h3>🛡️ Spam Blocking</h3><p>Call & text protection</p></div>
+              <div class="feature"><h3>📸 Photo Organization</h3><p>Smart media management</p></div>
+              <div class="feature"><h3>⚡ Performance Boost</h3><p>Speed optimization</p></div>
+              <div style="margin-top: 40px; padding: 25px; background: rgba(255,255,255,0.15); 
+                          border-radius: 20px; max-width: 500px; margin-left: auto; margin-right: auto;">
+                  <h2>🎯 SwipeeClean Smart</h2>
+                  <p><strong>Professional Storage Management</strong></p>
               </div>
           </body>
-          </html>
-          EOF
-      - name: Setup Capacitor
+          </html>' > www/index.html
+          
+      - name: Initialize Capacitor from scratch
         script: |
-          cat > package.json << 'EOF'
-          {
-            "name": "swipeeclean-smart",
-            "version": "1.0.0"
-          }
-          EOF
-          npm install @capacitor/core@^6.0.0 @capacitor/cli@^6.0.0 @capacitor/ios@^6.0.0
-          npx cap init SwipeeClean com.swipeeclean.app --web-dir=www
+          # Create minimal package.json
+          echo '{"name": "swipeeclean", "version": "1.0.0"}' > package.json
+          
+          # Install Capacitor
+          npm install @capacitor/core @capacitor/cli @capacitor/ios
+          
+          # Initialize with JavaScript config (no TypeScript)
+          npx cap init "SwipeeClean Smart" com.swipeeclean.smart --web-dir=www
+          
+          # Add iOS platform
           npx cap add ios
+          
+          # Sync files
           npx cap sync ios
+          
       - name: Build iOS app
         script: |
-          xcode-project build-ipa --workspace ios/App/App.xcworkspace --scheme App
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -destination generic/platform=iOS -archivePath App.xcarchive archive
+          xcodebuild -exportArchive -archivePath App.xcarchive -exportPath . -exportOptionsPlist ../../exportOptions.plist
+          
     artifacts:
-      - build/ios/ipa/*.ipa
+      - ios/App/*.ipa
+      - ios/App/App.xcarchive
+      
     publishing:
       email:
         recipients:
           - swipeeclean@gmail.com
+        notify:
+          success: true
+          failure: true
 
