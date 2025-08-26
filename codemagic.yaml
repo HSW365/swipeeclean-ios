@@ -7,26 +7,32 @@ workflows:
     scripts:
       - name: Fresh start - ignore all existing files
         script: |
-          # Move ALL existing files out of the way
           mkdir -p backup
           mv *.json backup/ 2>/dev/null || true
           mv *.ts backup/ 2>/dev/null || true
           mv *.js backup/ 2>/dev/null || true
           mv node_modules backup/ 2>/dev/null || true
           
-          # Create completely fresh setup
+          # Create web content
           mkdir -p www
-          echo '<!DOCTYPE html>
+          cat > www/index.html << 'EOF'
+          <!DOCTYPE html>
           <html>
           <head>
               <title>SwipeeClean Smart</title>
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <style>
-                  body { font-family: -apple-system, sans-serif; margin: 0; padding: 20px; 
-                         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                         color: white; min-height: 100vh; text-align: center; }
-                  .feature { background: rgba(255,255,255,0.1); padding: 20px; margin: 15px auto; 
-                            border-radius: 15px; max-width: 500px; }
+                  body { 
+                      font-family: -apple-system, sans-serif; 
+                      margin: 0; padding: 20px; 
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                      color: white; min-height: 100vh; text-align: center; 
+                  }
+                  .feature { 
+                      background: rgba(255,255,255,0.1); 
+                      padding: 20px; margin: 15px auto; 
+                      border-radius: 15px; max-width: 500px; 
+                  }
                   .logo { font-size: 4em; margin-bottom: 20px; }
                   .price { background: rgba(255,255,255,0.2); font-weight: bold; }
               </style>
@@ -41,64 +47,67 @@ workflows:
               <div class="feature"><h3>🛡️ Spam Blocking</h3><p>Call & text protection</p></div>
               <div class="feature"><h3>📸 Photo Organization</h3><p>Smart media management</p></div>
               <div class="feature"><h3>⚡ Performance Boost</h3><p>Speed optimization</p></div>
-              <div style="margin-top: 40px; padding: 25px; background: rgba(255,255,255,0.15); 
-                          border-radius: 20px; max-width: 500px; margin-left: auto; margin-right: auto;">
+              <div style="margin-top: 40px; padding: 25px; background: rgba(255,255,255,0.15); border-radius: 20px; max-width: 500px; margin-left: auto; margin-right: auto;">
                   <h2>🎯 SwipeeClean Smart</h2>
                   <p><strong>Professional Storage Management</strong></p>
               </div>
           </body>
-          </html>' > www/index.html
+          </html>
+          EOF
           
-      - name: Initialize Capacitor from scratch
+      - name: Initialize Capacitor
         script: |
-          # Create minimal package.json
           echo '{"name": "swipeeclean", "version": "1.0.0"}' > package.json
-          
-          # Install Capacitor
           npm install @capacitor/core @capacitor/cli @capacitor/ios
-          
-          # Initialize with JavaScript config (no TypeScript)
           npx cap init "SwipeeClean Smart" com.swipeeclean.smart --web-dir=www
-          
-          # Add iOS platform
           npx cap add ios
-          
-          # Sync files
           npx cap sync ios
           
-      - name: Configure for unsigned build
+      - name: Verify web content
         script: |
-          # Modify iOS project to allow unsigned builds
-          cd ios/App
+          echo "=== Checking web content ==="
+          ls -la www/
+          echo "=== HTML content ==="
+          head -20 www/index.html
+          echo "=== iOS app content ==="
+          ls -la ios/App/App/public/
           
-          # Set code signing to manual and disable signing
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' App.xcodeproj/project.pbxproj
-          sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "";/g' App.xcodeproj/project.pbxproj
-          
-          # Add code signing identity as empty
-          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer";/CODE_SIGN_IDENTITY = "";/g' App.xcodeproj/project.pbxproj
-          
-          echo "iOS project configured for unsigned build"
-          
-      - name: Build iOS app (unsigned)
+      - name: Build for iOS Simulator with content
         script: |
           cd ios/App
           
-          # Build for simulator (doesn't require signing)
-          xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 15' -derivedDataPath build
+          # Build for simulator
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 15' -derivedDataPath build clean build
           
-          # Create a simple app bundle
-          mkdir -p SwipeeClean.app
-          cp -r build/Build/Products/Debug-iphonesimulator/App.app/* SwipeeClean.app/
+          # Verify the build
+          echo "=== Build products ==="
+          ls -la build/Build/Products/Debug-iphonesimulator/
           
-          # Create info about the app
-          echo "SwipeeClean Smart iOS App - Built Successfully!" > SwipeeClean_README.txt
-          echo "This is your SwipeeClean app built for iOS Simulator" >> SwipeeClean_README.txt
-          echo "To run on device, you'll need Apple Developer account for code signing" >> SwipeeClean_README.txt
+          # Create proper app package
+          APP_PATH="build/Build/Products/Debug-iphonesimulator/App.app"
+          if [ -d "$APP_PATH" ]; then
+            echo "=== App contents ==="
+            ls -la "$APP_PATH"
+            
+            # Copy to artifacts location
+            cp -r "$APP_PATH" SwipeeClean-Smart.app
+            
+            # Create info file
+            echo "SwipeeClean Smart iOS App" > SwipeeClean-Info.txt
+            echo "Built: $(date)" >> SwipeeClean-Info.txt
+            echo "Bundle ID: com.swipeeclean.smart" >> SwipeeClean-Info.txt
+            echo "Platform: iOS Simulator" >> SwipeeClean-Info.txt
+            echo "" >> SwipeeClean-Info.txt
+            echo "App Contents:" >> SwipeeClean-Info.txt
+            ls -la "$APP_PATH" >> SwipeeClean-Info.txt
+          else
+            echo "ERROR: App not found at $APP_PATH"
+            exit 1
+          fi
           
     artifacts:
-      - ios/App/SwipeeClean.app
-      - ios/App/SwipeeClean_README.txt
+      - ios/App/SwipeeClean-Smart.app
+      - ios/App/SwipeeClean-Info.txt
       - ios/App/build/Build/Products/Debug-iphonesimulator/App.app
       
     publishing:
