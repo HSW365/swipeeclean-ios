@@ -7,7 +7,6 @@ workflows:
     scripts:
       - name: Create simple app (skip npm build)
         script: |
-          # Remove package.json temporarily to avoid npm build
           mv package.json package.json.backup
           mkdir -p www
           cat > www/index.html << 'EOF'
@@ -84,7 +83,6 @@ workflows:
           EOF
       - name: Setup Capacitor
         script: |
-          # Create simple package.json for Capacitor
           cat > package.json << 'EOF'
           {
             "name": "swipeeclean-smart",
