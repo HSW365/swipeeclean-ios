@@ -2,7 +2,7 @@ workflows:
   ios-workflow:
     name: SwipeeClean iOS Build
     environment:
-      node: v18.17.0
+      node: v20.17.0
       xcode: latest
     scripts:
       - name: Create simple app (skip npm build)
@@ -89,7 +89,7 @@ workflows:
             "version": "1.0.0"
           }
           EOF
-          npm install @capacitor/core @capacitor/cli @capacitor/ios
+          npm install @capacitor/core@^6.0.0 @capacitor/cli@^6.0.0 @capacitor/ios@^6.0.0
           npx cap init SwipeeClean com.swipeeclean.app --web-dir=www
           npx cap add ios
           npx cap sync ios
@@ -102,3 +102,4 @@ workflows:
       email:
         recipients:
           - swipeeclean@gmail.com
+
