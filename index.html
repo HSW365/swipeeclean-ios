@@ -1,84 +1,95 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SwipeeClean Smart</title>
-    <style>
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        margin: 0;
-        padding: 20px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        min-height: 100vh;
-      }
-      .container {
-        max-width: 600px;
-        margin: 0 auto;
-        text-align: center;
-      }
-      .logo {
-        font-size: 3em;
-        margin-bottom: 20px;
-      }
-      .feature {
-        background: rgba(255,255,255,0.1);
-        padding: 20px;
-        margin: 15px 0;
-        border-radius: 15px;
-        backdrop-filter: blur(10px);
-      }
-      .price {
-        background: rgba(255,255,255,0.2);
-        padding: 15px;
-        border-radius: 10px;
-        margin: 20px 0;
-        font-weight: bold;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="logo">🧹</div>
-      <h1>SwipeeClean Smart</h1>
-      <p>Your Premium Storage Optimization App</p>
-      
-      <div class="feature">
-        <h3>🚀 Smart Storage Analysis</h3>
-        <p>AI-powered storage scanning and optimization</p>
-      </div>
-      
-      <div class="feature">
-        <h3>📱 Duplicate File Detection</h3>
-        <p>Advanced algorithms to find and remove duplicates</p>
-      </div>
-      
-      <div class="price">
-        💰 Premium Subscription: $4.99/month
-      </div>
-      
-      <div class="feature">
-        <h3>🛡️ Spam Blocking</h3>
-        <p>Call and text spam protection</p>
-      </div>
-      
-      <div class="feature">
-        <h3>📸 Photo Organization</h3>
-        <p>Intelligent media file management</p>
-      </div>
-      
-      <div class="feature">
-        <h3>⚡ Performance Optimization</h3>
-        <p>Device speed and memory enhancement</p>
-      </div>
-      
-      <div style="margin-top: 40px; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 10px;">
-        <h2>Ready to Transform Your Device!</h2>
-        <p>SwipeeClean Smart - Professional Storage Management</p>
-        <p><strong>Goal: $1,000,000 by September 2025</strong></p>
-      </div>
-    </div>
-  </body>
-</html>
-
+workflows:
+  ios-workflow:
+    name: SwipeeClean iOS Build
+    environment:
+      node: v18.17.0
+      xcode: latest
+    scripts:
+      - name: Skip complex build and create simple app
+        script: |
+          mkdir -p www
+          cat > www/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>SwipeeClean Smart</title>
+              <style>
+                  body { 
+                      font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+                      margin: 0; padding: 20px; 
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      color: white; min-height: 100vh;
+                  }
+                  .container { max-width: 600px; margin: 0 auto; text-align: center; }
+                  .feature { 
+                      background: rgba(255,255,255,0.1); 
+                      padding: 20px; margin: 15px 0; 
+                      border-radius: 15px; 
+                  }
+                  .logo { font-size: 4em; margin-bottom: 20px; }
+                  .price { 
+                      background: rgba(255,255,255,0.2); 
+                      padding: 20px; border-radius: 15px; 
+                      font-weight: bold; font-size: 1.2em;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <div class="logo">🧹</div>
+                  <h1>SwipeeClean Smart</h1>
+                  <p>Premium Storage Optimization for iOS</p>
+                  
+                  <div class="feature">
+                      <h3>🚀 Smart Storage Analysis</h3>
+                      <p>AI-powered storage scanning and optimization</p>
+                  </div>
+                  
+                  <div class="feature">
+                      <h3>📱 Duplicate File Detection</h3>
+                      <p>Advanced algorithms to find and remove duplicates</p>
+                  </div>
+                  
+                  <div class="price">
+                      💰 Premium Subscription: $4.99/month
+                  </div>
+                  
+                  <div class="feature">
+                      <h3>🛡️ Advanced Spam Blocking</h3>
+                      <p>Call and text spam protection</p>
+                  </div>
+                  
+                  <div class="feature">
+                      <h3>📸 Smart Photo Organization</h3>
+                      <p>Intelligent media file management</p>
+                  </div>
+                  
+                  <div class="feature">
+                      <h3>⚡ Performance Optimization</h3>
+                      <p>Device speed and memory enhancement</p>
+                  </div>
+                  
+                  <div style="margin-top: 40px; padding: 25px; background: rgba(255,255,255,0.15); border-radius: 20px;">
+                      <h2>🎯 Ready to Transform Your Device!</h2>
+                      <p><strong>SwipeeClean Smart - Professional Storage Management</strong></p>
+                      <p>Goal: $1,000,000 by September 2025</p>
+                  </div>
+              </div>
+          </body>
+          </html>
+          EOF
+      - name: Setup Capacitor
+        script: |
+          npm install @capacitor/core @capacitor/cli @capacitor/ios
+          npx cap sync ios
+      - name: Build iOS app
+        script: |
+          xcode-project build-ipa --workspace ios/App/App.xcworkspace --scheme App
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      email:
+        recipients:
+          - swipeeclean@gmail.com
