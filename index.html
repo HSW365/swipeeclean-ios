@@ -5,8 +5,10 @@ workflows:
       node: v18.17.0
       xcode: latest
     scripts:
-      - name: Skip complex build and create simple app
+      - name: Create simple app (skip npm build)
         script: |
+          # Remove package.json temporarily to avoid npm build
+          mv package.json package.json.backup
           mkdir -p www
           cat > www/index.html << 'EOF'
           <!DOCTYPE html>
@@ -82,7 +84,16 @@ workflows:
           EOF
       - name: Setup Capacitor
         script: |
+          # Create simple package.json for Capacitor
+          cat > package.json << 'EOF'
+          {
+            "name": "swipeeclean-smart",
+            "version": "1.0.0"
+          }
+          EOF
           npm install @capacitor/core @capacitor/cli @capacitor/ios
+          npx cap init SwipeeClean com.swipeeclean.app --web-dir=www
+          npx cap add ios
           npx cap sync ios
       - name: Build iOS app
         script: |
