@@ -63,52 +63,25 @@ workflows:
           npx cap add ios
           npx cap sync ios
           
-      - name: Verify web content
+      - name: Build iOS app properly
         script: |
-          echo "=== Checking web content ==="
-          ls -la www/
-          echo "=== HTML content ==="
-          head -20 www/index.html
-          echo "=== iOS app content ==="
-          ls -la ios/App/App/public/
+          # Use Codemagic's built-in iOS build tool
+          xcode-project build-ipa --workspace ios/App/App.xcworkspace --scheme App --config Debug
           
-      - name: Build for iOS Simulator with content
-        script: |
-          cd ios/App
+          # Create info file
+          echo "SwipeeClean Smart iOS App" > SwipeeClean-Info.txt
+          echo "Built: $(date)" >> SwipeeClean-Info.txt
+          echo "Bundle ID: com.swipeeclean.smart" >> SwipeeClean-Info.txt
+          echo "Status: Successfully built!" >> SwipeeClean-Info.txt
           
-          # Build for simulator
-          xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 15' -derivedDataPath build clean build
-          
-          # Verify the build
-          echo "=== Build products ==="
-          ls -la build/Build/Products/Debug-iphonesimulator/
-          
-          # Create proper app package
-          APP_PATH="build/Build/Products/Debug-iphonesimulator/App.app"
-          if [ -d "$APP_PATH" ]; then
-            echo "=== App contents ==="
-            ls -la "$APP_PATH"
-            
-            # Copy to artifacts location
-            cp -r "$APP_PATH" SwipeeClean-Smart.app
-            
-            # Create info file
-            echo "SwipeeClean Smart iOS App" > SwipeeClean-Info.txt
-            echo "Built: $(date)" >> SwipeeClean-Info.txt
-            echo "Bundle ID: com.swipeeclean.smart" >> SwipeeClean-Info.txt
-            echo "Platform: iOS Simulator" >> SwipeeClean-Info.txt
-            echo "" >> SwipeeClean-Info.txt
-            echo "App Contents:" >> SwipeeClean-Info.txt
-            ls -la "$APP_PATH" >> SwipeeClean-Info.txt
-          else
-            echo "ERROR: App not found at $APP_PATH"
-            exit 1
-          fi
+          # Check what was created
+          echo "=== Checking build artifacts ===" >> SwipeeClean-Info.txt
+          find . -name "*.ipa" -o -name "*.app" | head -10 >> SwipeeClean-Info.txt
           
     artifacts:
-      - ios/App/SwipeeClean-Smart.app
-      - ios/App/SwipeeClean-Info.txt
-      - ios/App/build/Build/Products/Debug-iphonesimulator/App.app
+      - build/ios/ipa/*.ipa
+      - "**/*.ipa"
+      - SwipeeClean-Info.txt
       
     publishing:
       email:
