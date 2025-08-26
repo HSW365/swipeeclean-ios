@@ -66,15 +66,40 @@ workflows:
           # Sync files
           npx cap sync ios
           
-      - name: Build iOS app
+      - name: Configure for unsigned build
+        script: |
+          # Modify iOS project to allow unsigned builds
+          cd ios/App
+          
+          # Set code signing to manual and disable signing
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' App.xcodeproj/project.pbxproj
+          sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "";/g' App.xcodeproj/project.pbxproj
+          
+          # Add code signing identity as empty
+          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer";/CODE_SIGN_IDENTITY = "";/g' App.xcodeproj/project.pbxproj
+          
+          echo "iOS project configured for unsigned build"
+          
+      - name: Build iOS app (unsigned)
         script: |
           cd ios/App
-          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -destination generic/platform=iOS -archivePath App.xcarchive archive
-          xcodebuild -exportArchive -archivePath App.xcarchive -exportPath . -exportOptionsPlist ../../exportOptions.plist
+          
+          # Build for simulator (doesn't require signing)
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 15' -derivedDataPath build
+          
+          # Create a simple app bundle
+          mkdir -p SwipeeClean.app
+          cp -r build/Build/Products/Debug-iphonesimulator/App.app/* SwipeeClean.app/
+          
+          # Create info about the app
+          echo "SwipeeClean Smart iOS App - Built Successfully!" > SwipeeClean_README.txt
+          echo "This is your SwipeeClean app built for iOS Simulator" >> SwipeeClean_README.txt
+          echo "To run on device, you'll need Apple Developer account for code signing" >> SwipeeClean_README.txt
           
     artifacts:
-      - ios/App/*.ipa
-      - ios/App/App.xcarchive
+      - ios/App/SwipeeClean.app
+      - ios/App/SwipeeClean_README.txt
+      - ios/App/build/Build/Products/Debug-iphonesimulator/App.app
       
     publishing:
       email:
@@ -83,4 +108,3 @@ workflows:
         notify:
           success: true
           failure: true
-
