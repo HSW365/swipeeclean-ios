@@ -1,16 +1,23 @@
 workflows:
   ios-workflow:
-    name: SwipeeClean iOS Build
+    name: SwipeeClean iOS (Capacitor)
     environment:
-      node: latest
-      xcode: latest
+      xcode: 16.2        # or "latest"
+      node: 20           # or "latest"
+    cache:
+      cache_paths:
+        - ~/.npm
+        - ios/Pods
+        - $HOME/Library/Caches/CocoaPods
+
     scripts:
-      - name: Create SwipeeClean web app
+      - name: Prepare web assets
         script: |
-          # Create a standalone web version first
-          mkdir -p SwipeeClean_WebApp
-          
-          cat > SwipeeClean_WebApp/index.html << 'EOF'
+          set -euo pipefail
+          rm -rf web
+          mkdir -p web
+
+          cat > web/index.html << 'EOF'
           <!DOCTYPE html>
           <html>
           <head>
@@ -21,55 +28,26 @@ workflows:
               <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiByeD0iNDAiIGZpbGw9InVybCgjZ3JhZGllbnQwX2xpbmVhcl8xXzEpIi8+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImdyYWRpZW50MF9saW5lYXJfMV8xIiB4MT0iMCIgeTE9IjAiIHgyPSIxODAiIHkyPSIxODAiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0iIzY2N2VlYSIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM3NjRiYTIiLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4K">
               <style>
                   * { margin: 0; padding: 0; box-sizing: border-box; }
-                  body { 
-                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                      color: white; min-height: 100vh; overflow-x: hidden;
-                  }
+                  body { font-family: -apple-system, BlinkMacSystemFont,'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color: white; min-height: 100vh; overflow-x: hidden; }
                   .container { max-width: 600px; margin: 0 auto; padding: 20px; }
                   .header { text-align: center; padding: 40px 0; }
                   .logo { font-size: 5em; margin-bottom: 20px; animation: bounce 2s infinite; }
-                  @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }
+                  @keyframes bounce { 0%,20%,50%,80%,100% { transform: translateY(0);} 40% { transform: translateY(-10px);} 60% { transform: translateY(-5px);} }
                   h1 { font-size: 2.5em; margin-bottom: 10px; font-weight: 700; }
                   .subtitle { font-size: 1.2em; opacity: 0.9; margin-bottom: 40px; }
-                  .feature { 
-                      background: rgba(255,255,255,0.15); 
-                      backdrop-filter: blur(10px);
-                      padding: 25px; margin: 20px 0; 
-                      border-radius: 20px; 
-                      border: 1px solid rgba(255,255,255,0.2);
-                      transition: transform 0.3s ease;
-                  }
+                  .feature { background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 25px; margin: 20px 0; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); transition: transform .3s ease; }
                   .feature:hover { transform: translateY(-5px); }
                   .feature h3 { font-size: 1.3em; margin-bottom: 10px; }
                   .feature p { opacity: 0.9; line-height: 1.5; }
-                  .premium { 
-                      background: linear-gradient(45deg, rgba(255,215,0,0.3), rgba(255,165,0,0.3)); 
-                      border: 2px solid rgba(255,215,0,0.5);
-                      text-align: center;
-                  }
+                  .premium { background: linear-gradient(45deg, rgba(255,215,0,0.3), rgba(255,165,0,0.3)); border: 2px solid rgba(255,215,0,0.5); text-align: center; }
                   .premium h3 { color: #FFD700; font-size: 1.5em; }
-                  .cta { 
-                      background: rgba(255,255,255,0.2); 
-                      text-align: center; 
-                      padding: 30px; 
-                      border-radius: 25px; 
-                      margin-top: 40px;
-                      border: 2px solid rgba(255,255,255,0.3);
-                  }
-                  .btn { 
-                      background: linear-gradient(45deg, #FF6B6B, #4ECDC4); 
-                      color: white; padding: 15px 30px; 
-                      border: none; border-radius: 50px; 
-                      font-size: 1.1em; font-weight: 600; 
-                      cursor: pointer; margin: 10px;
-                      transition: transform 0.3s ease;
-                  }
+                  .cta { background: rgba(255,255,255,0.2); text-align: center; padding: 30px; border-radius: 25px; margin-top: 40px; border: 2px solid rgba(255,255,255,0.3); }
+                  .btn { background: linear-gradient(45deg,#FF6B6B,#4ECDC4); color: white; padding: 15px 30px; border: none; border-radius: 50px; font-size: 1.1em; font-weight: 600; cursor: pointer; margin: 10px; transition: transform .3s ease; }
                   .btn:hover { transform: scale(1.05); }
                   .stats { display: flex; justify-content: space-around; margin: 30px 0; }
                   .stat { text-align: center; }
                   .stat-number { font-size: 2em; font-weight: bold; color: #FFD700; }
-                  .stat-label { font-size: 0.9em; opacity: 0.8; }
+                  .stat-label { font-size: .9em; opacity: .8; }
               </style>
           </head>
           <body>
@@ -79,53 +57,17 @@ workflows:
                       <h1>SwipeeClean Smart</h1>
                       <p class="subtitle">Professional Storage Optimization for iOS</p>
                   </div>
-                  
-                  <div class="feature">
-                      <h3>🚀 AI-Powered Storage Analysis</h3>
-                      <p>Advanced algorithms scan your device to identify storage waste and optimization opportunities.</p>
-                  </div>
-                  
-                  <div class="feature">
-                      <h3>📱 Smart Duplicate Detection</h3>
-                      <p>Intelligently finds and removes duplicate photos, videos, and files to free up valuable space.</p>
-                  </div>
-                  
-                  <div class="feature premium">
-                      <h3>💰 Premium Subscription</h3>
-                      <p><strong>$4.99/month</strong></p>
-                      <p>Unlock all premium features and advanced optimization tools</p>
-                  </div>
-                  
-                  <div class="feature">
-                      <h3>🛡️ Advanced Spam Protection</h3>
-                      <p>Block unwanted calls and texts with intelligent spam detection technology.</p>
-                  </div>
-                  
-                  <div class="feature">
-                      <h3>📸 Smart Photo Organization</h3>
-                      <p>Automatically organize and optimize your photo library for maximum efficiency.</p>
-                  </div>
-                  
-                  <div class="feature">
-                      <h3>⚡ Performance Optimization</h3>
-                      <p>Boost your device speed and responsiveness with advanced system optimization.</p>
-                  </div>
-                  
+                  <div class="feature"><h3>🚀 AI-Powered Storage Analysis</h3><p>Advanced algorithms scan your device to identify storage waste and optimization opportunities.</p></div>
+                  <div class="feature"><h3>📱 Smart Duplicate Detection</h3><p>Intelligently finds and removes duplicate photos, videos, and files to free up valuable space.</p></div>
+                  <div class="feature premium"><h3>💰 Premium Subscription</h3><p><strong>$4.99/month</strong></p><p>Unlock all premium features and advanced optimization tools</p></div>
+                  <div class="feature"><h3>🛡️ Advanced Spam Protection</h3><p>Block unwanted calls and texts with intelligent spam detection technology.</p></div>
+                  <div class="feature"><h3>📸 Smart Photo Organization</h3><p>Automatically organize and optimize your photo library for maximum efficiency.</p></div>
+                  <div class="feature"><h3>⚡ Performance Optimization</h3><p>Boost your device speed and responsiveness with advanced system optimization.</p></div>
                   <div class="stats">
-                      <div class="stat">
-                          <div class="stat-number">50GB+</div>
-                          <div class="stat-label">Average Space Saved</div>
-                      </div>
-                      <div class="stat">
-                          <div class="stat-number">10x</div>
-                          <div class="stat-label">Faster Performance</div>
-                      </div>
-                      <div class="stat">
-                          <div class="stat-number">99%</div>
-                          <div class="stat-label">Spam Blocked</div>
-                      </div>
+                      <div class="stat"><div class="stat-number">50GB+</div><div class="stat-label">Average Space Saved</div></div>
+                      <div class="stat"><div class="stat-number">10x</div><div class="stat-label">Faster Performance</div></div>
+                      <div class="stat"><div class="stat-number">99%</div><div class="stat-label">Spam Blocked</div></div>
                   </div>
-                  
                   <div class="cta">
                       <h2>🎯 Transform Your Device Today!</h2>
                       <p><strong>SwipeeClean Smart - Professional Storage Management</strong></p>
@@ -133,38 +75,18 @@ workflows:
                       <button class="btn" onclick="alert('Coming to App Store Soon!')">Download Now</button>
                   </div>
               </div>
-              
               <script>
-                  // Add some interactivity
-                  document.addEventListener('DOMContentLoaded', function() {
-                      console.log('SwipeeClean Smart - Ready for iOS!');
-                      
-                      // Add click effects
-                      document.querySelectorAll('.feature').forEach(feature => {
-                          feature.addEventListener('click', function() {
-                              this.style.transform = 'scale(0.98)';
-                              setTimeout(() => {
-                                  this.style.transform = 'translateY(-5px)';
-                              }, 100);
-                          });
-                      });
+                document.addEventListener('DOMContentLoaded', function() {
+                  document.querySelectorAll('.feature').forEach(el=>{
+                    el.addEventListener('click', ()=>{ el.style.transform='scale(0.98)'; setTimeout(()=>{ el.style.transform='translateY(-5px)' },100); });
                   });
+                });
               </script>
           </body>
           </html>
           EOF
-          
-          # Create additional files
-          echo "SwipeeClean Smart - Professional iOS App" > SwipeeClean_WebApp/README.txt
-          echo "Built: $(date)" >> SwipeeClean_WebApp/README.txt
-          echo "Version: 1.0.0" >> SwipeeClean_WebApp/README.txt
-          echo "Bundle ID: com.swipeeclean.smart" >> SwipeeClean_WebApp/README.txt
-          echo "" >> SwipeeClean_WebApp/README.txt
-          echo "This is your SwipeeClean Smart web app!" >> SwipeeClean_WebApp/README.txt
-          echo "Open index.html in any browser to see your app." >> SwipeeClean_WebApp/README.txt
-          
-          # Create a simple manifest for PWA
-          cat > SwipeeClean_WebApp/manifest.json << 'EOF'
+
+          cat > web/manifest.json << 'EOF'
           {
             "name": "SwipeeClean Smart",
             "short_name": "SwipeeClean",
@@ -172,32 +94,49 @@ workflows:
             "start_url": "/",
             "display": "standalone",
             "background_color": "#667eea",
-            "theme_color": "#764ba2",
-            "icons": [
-              {
-                "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iNDAiIGZpbGw9InVybCgjZ3JhZGllbnQwX2xpbmVhcl8xXzEpIi8+Cjx0ZXh0IHg9Ijk2IiB5PSIxMjAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI4MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPvCfp7k8L3RleHQ+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImdyYWRpZW50MF9saW5lYXJfMV8xIiB4MT0iMCIgeTE9IjAiIHgyPSIxOTIiIHkyPSIxOTIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0iIzY2N2VlYSIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM3NjRiYTIiLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4K",
-                "sizes": "192x192",
-                "type": "image/svg+xml"
-              }
-            ]
+            "theme_color": "#764ba2"
           }
           EOF
-          
-          # Create CSS file
-          echo "/* SwipeeClean Smart - Additional Styles */" > SwipeeClean_WebApp/styles.css
-          echo "/* Add any additional styling here */" >> SwipeeClean_WebApp/styles.css
-          
-          # Create JS file
-          echo "// SwipeeClean Smart - Additional JavaScript" > SwipeeClean_WebApp/app.js
-          echo "console.log('SwipeeClean Smart - Ready for success!');" >> SwipeeClean_WebApp/app.js
-          
-          # List all created files
-          echo "=== SwipeeClean Smart Files Created ==="
-          ls -la SwipeeClean_WebApp/
-          
+
+          echo "/* SwipeeClean Smart - Additional Styles */" > web/styles.css
+          echo "// SwipeeClean Smart - Additional JavaScript" > web/app.js
+
+      - name: Initialize Capacitor & iOS project
+        script: |
+          set -euo pipefail
+          npm init -y
+          npm install @capacitor/core @capacitor/cli
+          npx cap init "SwipeeClean" "com.swipeeclean.smart" --web-dir=web --npm-client npm
+          npx cap add ios
+          npx cap sync ios
+
+          pushd ios/App
+          pod install
+          popd
+
+      - name: Build iOS Simulator .app (no signing required)
+        script: |
+          set -euo pipefail
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -sdk iphonesimulator \
+            -configuration Release \
+            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            -derivedDataPath build
+
+          APP_PATH="$(/usr/bin/find build/Build/Products/Release-iphonesimulator -maxdepth 1 -name '*.app' | head -n 1)"
+          echo "Built app at: $APP_PATH"
+
+          mkdir -p build_artifacts
+          # Zip the simulator app for download
+          ditto -ck --sequesterRsrc --keepParent "$APP_PATH" build_artifacts/SwipeeClean-Simulator.app.zip
+
     artifacts:
-      - SwipeeClean_WebApp/**
-      
+      - build_artifacts/**
+      - build/Build/Products/Release-iphonesimulator/*.app
+      - web/**
+
     publishing:
       email:
         recipients:
