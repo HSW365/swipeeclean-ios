@@ -2,11 +2,14 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Zap, Star, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useOwner } from "@/lib/owner";
 
 export default function SignUpBanner() {
   const [isVisible, setIsVisible] = useState(true);
+  const isOwner = useOwner();
 
-  if (!isVisible) return null;
+  // The owner already has VIP all access: no sign-up banner.
+  if (!isVisible || isOwner) return null;
 
   return (
     <AnimatePresence>

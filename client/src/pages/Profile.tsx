@@ -9,9 +9,12 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Link } from "wouter";
 import type { User } from "@shared/schema";
+import OwnerVipBadge from "@/components/OwnerVipBadge";
+import { useOwner } from "@/lib/owner";
 
 export default function Profile() {
   const { toast } = useToast();
+  const isOwner = useOwner();
   const { user, isAuthenticated, isLoading } = useAuth() as {
     user: User | undefined;
     isAuthenticated: boolean;
@@ -48,8 +51,10 @@ export default function Profile() {
     {
       icon: Crown,
       label: "Manage Subscription",
-      description: user?.isSubscribed ? "Active subscription" : "Subscribe to Pro",
-      action: () => window.location.href = "/subscribe",
+      description: isOwner ? "VIP owner access, free" : user?.isSubscribed ? "Active subscription" : "Subscribe to Pro",
+      action: () => isOwner
+        ? toast({ title: "VIP · Owner", description: "Every Pro feature is unlocked for you. Nothing to pay." })
+        : window.location.href = "/subscribe",
       color: "text-yellow-600",
       bgColor: "bg-yellow-50",
     },
@@ -113,10 +118,16 @@ export default function Profile() {
                   </h3>
                   <p className="text-gray-600 text-sm">{user?.email}</p>
                   <div className="flex items-center mt-2">
-                    <Crown className="text-yellow-500 mr-1" size={16} />
-                    <span className="text-sm font-medium text-gray-700">
-                      {user?.isSubscribed ? "Pro Member" : "Free Trial"}
-                    </span>
+                    {isOwner ? (
+                      <OwnerVipBadge />
+                    ) : (
+                      <>
+                        <Crown className="text-yellow-500 mr-1" size={16} />
+                        <span className="text-sm font-medium text-gray-700">
+                          {user?.isSubscribed ? "Pro Member" : "Free Trial"}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

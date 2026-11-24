@@ -6,10 +6,14 @@ export function useAuth() {
     retry: false,
   });
 
+  // isOwner is set by the server only after it verifies the owner PIN session token.
+  const isOwner = (user as any)?.isOwner === true;
+
   return {
     user,
     isLoading,
     isAuthenticated: !!user,
-    isSubscribed: (user as any)?.isSubscribed || (user as any)?.isFounder || false,
+    isOwner,
+    isSubscribed: isOwner || (user as any)?.isSubscribed || (user as any)?.isFounder || false,
   };
 }

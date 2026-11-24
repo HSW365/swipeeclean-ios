@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { isOwnerRequest, ownerUser } from "./owner";
 // import { setupAuth, isAuthenticated } from "./replitAuth"; // REMOVED - DIRECT ACCESS
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -8,6 +9,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Mock user route - no authentication required
   app.get('/api/auth/user', async (req: any, res) => {
+    // Owner signed in with the HSW365 owner PIN: token verified with the owner-pin service.
+    if (await isOwnerRequest(req)) {
+      return res.json(ownerUser);
+    }
     // Return mock user for public access
     res.json({
       id: "swipeeclean-user",

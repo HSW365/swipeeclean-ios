@@ -2,9 +2,20 @@ import { useState } from 'react';
 import { Sparkles, Image, Download, Database, Music, ArrowRight, Lock, Star, Users, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import OwnerVipBadge from "@/components/OwnerVipBadge";
+import { useOwner } from "@/lib/owner";
+
+// Where each previewed feature lives in the app (opened directly for the owner).
+const featureRoutes: Record<string, string> = {
+  storage: "/real-cleaner",
+  photos: "/organize",
+  email: "/email",
+  icloud: "/icloud",
+};
 
 export default function PreviewDashboard() {
   const [selectedTab, setSelectedTab] = useState('storage');
+  const isOwner = useOwner();
 
   const testimonials = [
     {
@@ -175,7 +186,19 @@ export default function PreviewDashboard() {
             ))}
           </div>
 
-          {/* Subscription Required Overlay */}
+          {isOwner ? (
+            <div className="flex items-center gap-3">
+              <OwnerVipBadge />
+              <Button 
+                onClick={() => window.location.href = featureRoutes[selectedTab] || "/real-cleaner"}
+                className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-4 text-lg"
+                data-testid="owner-start-feature"
+              >
+                Start {features[selectedTab].title}
+              </Button>
+            </div>
+          ) : (
+          /* Subscription Required Overlay */
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent z-10 flex items-center justify-center">
               <div className="text-center bg-white p-6 rounded-xl shadow-lg border-2 border-blue-200">
@@ -197,6 +220,7 @@ export default function PreviewDashboard() {
               Start {features[selectedTab].title}
             </Button>
           </div>
+          )}
         </div>
 
         {/* Customer Reviews */}
@@ -261,13 +285,24 @@ export default function PreviewDashboard() {
         <div className="bg-gradient-to-r from-red-600 to-orange-600 rounded-2xl p-8 text-center text-white">
           <h2 className="text-3xl font-bold mb-4">Ready to Free Up Space?</h2>
           <p className="text-xl mb-6">Join 2.5M+ users saving storage space daily</p>
-          <Button 
-            onClick={() => window.location.href = "/api/login"}
-            className="bg-white text-red-600 hover:bg-gray-100 text-xl px-8 py-4 font-bold"
-          >
-            🔥 Start Your Premium Subscription - 50% OFF
-          </Button>
-          <p className="text-sm mt-4 opacity-90">Limited time: First 10,000 users only</p>
+          {isOwner ? (
+            <Button 
+              onClick={() => window.location.href = "/real-cleaner"}
+              className="bg-white text-red-600 hover:bg-gray-100 text-xl px-8 py-4 font-bold"
+            >
+              VIP · Owner: Open All Pro Tools
+            </Button>
+          ) : (
+            <>
+              <Button 
+                onClick={() => window.location.href = "/api/login"}
+                className="bg-white text-red-600 hover:bg-gray-100 text-xl px-8 py-4 font-bold"
+              >
+                🔥 Start Your Premium Subscription - 50% OFF
+              </Button>
+              <p className="text-sm mt-4 opacity-90">Limited time: First 10,000 users only</p>
+            </>
+          )}
         </div>
       </div>
     </div>

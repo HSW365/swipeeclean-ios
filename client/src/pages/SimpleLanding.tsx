@@ -1,4 +1,9 @@
+import OwnerVipBadge from "@/components/OwnerVipBadge";
+import { useOwner, openOwnerLogin } from "@/lib/owner";
+
 export default function SimpleLanding() {
+  const isOwner = useOwner();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
@@ -39,6 +44,7 @@ export default function SimpleLanding() {
         <div className="mb-6 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
           <div className="text-center">
             <p className="text-xs text-purple-600 font-semibold mb-1">OWNER ACCESS</p>
+            {isOwner && <OwnerVipBadge className="mb-2" />}
             <div className="flex items-center justify-center gap-2 mb-1">
               <span className="text-2xl font-bold text-purple-600">SwipeeClean</span>
             </div>
@@ -51,30 +57,31 @@ export default function SimpleLanding() {
         <div className="space-y-3 mb-4">
           <button 
             onClick={() => {
-              const email = prompt("Enter your email for owner access:");
-              if (email === "swipeeclean@gmail.com") {
+              if (isOwner) {
                 window.location.href = "/real-cleaner";
               } else {
-                alert("Access denied. Owner access only.");
+                openOwnerLogin();
               }
             }}
             className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
           >
-            Owner Access (Free)
+            {isOwner ? "Open All Pro Tools (VIP)" : "Owner Access (Free)"}
           </button>
           
-          <button 
-            onClick={() => {
-              window.location.href = "/subscribe";
-            }}
-            className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
-          >
-            Subscribe - $4.99/month
-          </button>
+          {!isOwner && (
+            <button 
+              onClick={() => {
+                window.location.href = "/subscribe";
+              }}
+              className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
+            >
+              Subscribe - $4.99/month
+            </button>
+          )}
         </div>
         
         <p className="text-xs text-gray-500">
-          Owner access: swipeeclean@gmail.com • Subscribers: $4.99/month
+          Owner access: owner PIN • Subscribers: $4.99/month
         </p>
         
         {/* Links */}

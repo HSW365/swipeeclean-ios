@@ -4,13 +4,19 @@ import { useToast } from "@/hooks/use-toast";
 import RevenueDashboard from "@/components/RevenueDashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Users, TrendingUp, Target } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import OwnerVipBadge from "@/components/OwnerVipBadge";
+import { useOwner, openOwnerLogin } from "@/lib/owner";
 
 export default function OwnerDashboard() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, isOwner: serverOwner } = useAuth();
   const { toast } = useToast();
+  // Owner PIN session (owner-login.js); the server confirms the same token on /api/auth/user.
+  const pinOwner = useOwner();
+  const isOwner = pinOwner || serverOwner || (isAuthenticated && (user as any)?.email === "hoodstarent365@gmail.com");
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated && !pinOwner) {
       toast({
         title: "Unauthorized",
         description: "You are logged out. Logging in again...",
@@ -21,21 +27,22 @@ export default function OwnerDashboard() {
       }, 500);
       return;
     }
-  }, [isAuthenticated, isLoading, toast]);
+  }, [isAuthenticated, isLoading, pinOwner, toast]);
 
   // Only show for the owner (you)
-  if (!isAuthenticated || user?.email !== "hoodstarent365@gmail.com") {
+  if (!isOwner) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
-          <p className="text-gray-600">This dashboard is only available to the platform owner.</p>
+          <p className="text-gray-600 mb-4">This dashboard is only available to the platform owner.</p>
+          <Button onClick={openOwnerLogin}>Owner Login</Button>
         </div>
       </div>
     );
   }
 
-  if (isLoading) {
+  if (isLoading && !pinOwner) {
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
@@ -48,7 +55,10 @@ export default function OwnerDashboard() {
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-6xl mx-auto px-6 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Owner Dashboard</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-900">Owner Dashboard</h1>
+            <OwnerVipBadge />
+          </div>
           <p className="text-gray-600">Private revenue tracking and business metrics</p>
         </div>
       </header>
